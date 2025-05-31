@@ -575,7 +575,7 @@ export default function App() {
 
   return (
     <div className="flex flex-col h-screen bg-gray-100 font-sans">
-      {/* Tailwind CSS CDN is verplaatst naar public/index.html */}
+      {/* Navigatieknoppen */}
       <div className="flex justify-around py-2 bg-gray-200 border-b border-gray-300">
         <button 
             className={`py-2 px-4 rounded-lg ${activeScreen === 'table' ? 'bg-blue-500 text-white' : 'text-gray-800'}`} 
@@ -589,9 +589,13 @@ export default function App() {
         </button>
       </div>
 
-      {activeScreen === 'table' && <PeriodicTableScreen setSelectedElementForCalc={navigateToCalculatorWithElement} />}
-      {activeScreen === 'calculator' && <MolarMassCalculatorScreen initialFormula={formulaForCalculator} />}
-            {/* Voetnoot met auteursnaam */}
+      {/* Hoofdinhoud container die flexibel is en scrollt */}
+      <main className="flex-1 overflow-auto">
+        {activeScreen === 'table' && <PeriodicTableScreen setSelectedElementForCalc={navigateToCalculatorWithElement} />}
+        {activeScreen === 'calculator' && <MolarMassCalculatorScreen initialFormula={formulaForCalculator} />}
+      </main>
+
+      {/* Voetnoot met auteursnaam, altijd onderaan */}
       <footer className="w-full bg-gray-200 text-gray-600 text-center py-2 text-sm border-t border-gray-300 mt-auto">
         <p>Gemaakt door: [Sven 'Tomtaru' Maesen]</p>
       </footer>
