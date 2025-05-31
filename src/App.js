@@ -591,6 +591,10 @@ export default function App() {
 
       {activeScreen === 'table' && <PeriodicTableScreen setSelectedElementForCalc={navigateToCalculatorWithElement} />}
       {activeScreen === 'calculator' && <MolarMassCalculatorScreen initialFormula={formulaForCalculator} />}
+            {/* Voetnoot met auteursnaam */}
+      <footer className="w-full bg-gray-200 text-gray-600 text-center py-2 text-sm border-t border-gray-300 mt-auto">
+        <p>Gemaakt door: [Sven 'Tomtaru' Maesen]</p>
+      </footer>
     </div>
   );
 }
