@@ -304,6 +304,35 @@ const MolarMassCalculatorScreen = ({ initialFormula = '' }) => {
   const [molarMass, setMolarMass] = useState(null);
   const [calculationError, setCalculationError] = useState('');
 
+    useEffect(() => {
+    // Functie om de trivialNames.json data te laden via fetch
+    const loadTrivialNames = async () => {
+      try {
+        const response = await fetch('./data/trivialNames.json'); 
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setTrivialNamesData(data);
+      } catch (error) {
+        console.error("Fout bij het laden van triviale namen:", error);
+        setCalculationError("Fout bij het laden van triviale namen. Probeer het later opnieuw.");
+      }
+    };
+
+    loadTrivialNames();
+  }, []); // Lege dependency array betekent dat dit maar één keer wordt uitgevoerd bij het mounten
+
+  useEffect(() => {
+    if (initialFormula) {
+        setFormulaInput(initialFormula);
+        // Zorg ervoor dat trivialNamesData geladen is voordat je probeert te berekenen
+        if (Object.keys(trivialNamesData).length > 0) {
+            handleCalculateFromFormula(initialFormula); 
+        }
+    }
+  }, [initialFormula, trivialNamesData]); // Voeg trivialNamesData toe als dependency
+
   useEffect(() => {
     if (initialFormula) {
         setFormulaInput(initialFormula);
