@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { trivialNames } from './data/trivialNames.js'; // Importeer triviale namen
+import { trivialNames } from './data/trivialNames.json'; // Importeer triviale namen
 
 // Data voor het periodiek systeem
 // Bron voor atoommassa's: IUPAC, afgerond voor eenvoud
