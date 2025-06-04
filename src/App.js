@@ -388,7 +388,7 @@ const MolarMassCalculatorScreen = ({ initialFormula = '' }) => {
   useEffect(() => {
     if (initialFormula) {
         setFormulaInput(initialFormula);
-        handleCalculateFromFormula(initialFormula); // Direct berekenen als er een initiële formule is
+        handleCalculateFromFormula(initialFormula); // Bereken direct als er een initiële formule is
     }
   }, [initialFormula]);
 
@@ -400,32 +400,96 @@ const MolarMassCalculatorScreen = ({ initialFormula = '' }) => {
     let totalMass = 0;
     const elementsCount = {};
 
+    // Helper functie om het canonieke elementsymbool te krijgen (hoofdlettergevoelig)
+    const getCanonicalElementSymbol = (inputSymbol) => {
+        // Controleer direct of het symbool exact overeenkomt met een bekend element
+        if (atomicMasses[inputSymbol]) {
+            return inputSymbol;
+        }
+        return null; // Geen herkend element
+    };
+
+    // Functie om een subformule te parsen en het elementsCount object bij te werken.
+    // Dit is een recursieve parser die haakjes kan afhandelen.
+    function parseFormulaSegment(segment, segmentMultiplier = 1) {
+        let i = 0;
+        while (i < segment.length) {
+            let char = segment[i];
+
+            if (char === '(') {
+                // Zoek de overeenkomende sluithaakje
+                let openParens = 1;
+                let j = i + 1;
+                let subFormulaStart = j;
+                while (j < segment.length && openParens > 0) {
+                    if (segment[j] === '(') openParens++;
+                    else if (segment[j] === ')') openParens--;
+                    j++;
+                }
+
+                if (openParens > 0) {
+                    throw new Error(`Ongeldige formule: Ongepaard haakje in "${segment.substring(i)}".`);
+                }
+
+                let subFormula = segment.substring(subFormulaStart, j - 1);
+                i = j; // Verplaats index naar na het sluithaakje
+
+                // Zoek naar een nummer na het sluithaakje
+                let numStr = '';
+                while (i < segment.length && /\d/.test(segment[i])) {
+                    numStr += segment[i];
+                    i++;
+                }
+                let subMultiplier = numStr ? parseInt(numStr, 10) : 1;
+
+                // Recursief parsen van de subformule
+                parseFormulaSegment(subFormula, segmentMultiplier * subMultiplier);
+
+            } else if (/[A-Z]/.test(char)) {
+                // Begin van een elementsymbool
+                let symbol = char;
+                i++;
+                if (i < segment.length && /[a-z]/.test(segment[i])) {
+                    symbol += segment[i];
+                    i++;
+                }
+
+                let canonicalSymbol = getCanonicalElementSymbol(symbol);
+                if (!canonicalSymbol) {
+                    throw new Error(`Onbekend element of ongeldig symbool: "${symbol}". Let op hoofdlettergevoeligheid!`);
+                }
+
+                let numStr = '';
+                while (i < segment.length && /\d/.test(segment[i])) {
+                    numStr += segment[i];
+                    i++;
+                }
+                let count = numStr ? parseInt(numStr, 10) : 1;
+
+                elementsCount[canonicalSymbol] = (elementsCount[canonicalSymbol] || 0) + count * segmentMultiplier;
+
+            } else if (/\s/.test(char)) {
+                // Negeer witruimte
+                i++;
+            } else {
+                // Ongeldig teken
+                throw new Error(`Onbekend element of ongeldig symbool: "${char}". Let op hoofdlettergevoeligheid!`);
+            }
+        }
+    }
+
     // Splits de formule in hoofddeel en hydraatdeel
     const parts = formula.split(/[.·*]/);
     const mainFormula = parts[0].trim();
     const hydratePart = parts.length > 1 ? parts[1].trim() : '';
 
-    // Functe om subformule te parsem
-    function parseSubFormula(subFormula, multiplier = 1) {
-        // Regex om een element symbool (e.g., "H", "He") te matchen, gevoolgd door optioneel nummer
-        const elementRegex = /([A-Z][a-z]?)(\d*)/g;
-        let match;
-        while ((match = elementRegex.exec(subFormula)) !== null) {
-            const el = match[1];
-            const count = match[2] ? parseInt(match[2], 10) : 1;
-            if (!atomicMasses[el]) {
-                throw new Error(`Onbekend element: ${el}`);
-            }
-            elementsCount[el] = (elementsCount[el] || 0) + count * multiplier;
-        }
-    }
-    
-   // Molaire massa water
+    // Molaire massa water
     const molarMassH2O = 18.0150;
 
     // Behandel hydraat gedeelte
     if (hydratePart) {
-        const hydrateMatch = hydratePart.match(/^(\d+)H2O$/);
+        // Gebruik een hoofdlettergevoelige match voor H2O
+        const hydrateMatch = hydratePart.match(/^(\d+)H2O$/); 
         if (hydrateMatch) {
             const hydrateMultiplier = parseInt(hydrateMatch[1], 10);
             totalMass += hydrateMultiplier * molarMassH2O;
@@ -434,38 +498,18 @@ const MolarMassCalculatorScreen = ({ initialFormula = '' }) => {
         }
     }
 
-    // Hoofdformule parsen
-    // Regex om elementsymbolen (met optionele kleine letter en telling) OF
-    // groepen tussen haakjes (met optionele telling na het sluitende haakje) te matchen.
-    const mainRegex = /([A-Z][a-z]?)(\d*)|(\()([^)]+)(\))(\d*)/g;
-    mainRegex.lastIndex = 0; // Reset regex lastIndex voor nieuwe string
-    
-    let match;
-    while((match = mainRegex.exec(mainFormula)) !== null) {
-        if (match[1]) { // Matchte een enkel element (e.g., "K", "Al", "S", "O")
-            const el = match[1];
-            const count = match[2] ? parseInt(match[2], 10) : 1;
-            if (!atomicMasses[el]) {
-                throw new Error(`Onbekend element: ${el}`);
-            }
-            elementsCount[el] = (elementsCount[el] || 0) + count;
-        } else if (match[3]) { // Matchte een groep tussen haakjes (e.g., "(SO4)")
-            const groupFormula = match[4]; // Inhoud binnen haakjes (e.g., "SO4")
-            const groupMultiplier = match[6] ? parseInt(match[6], 10) : 1; // Nummer na haakjes (e.g., "2" in "(SO4)2")
-            parseSubFormula(groupFormula, groupMultiplier); // Parseer de subgroep recursief
-        }
-    }
+    // Parseer de hoofdformule
+    parseFormulaSegment(mainFormula, 1);
 
     // Eindberekening voor elementen in de hoofdformule
     for (const element in elementsCount) {
         totalMass += atomicMasses[element] * elementsCount[element];
     }
     
-    // Controleer of er iets is geparsed uit de hoofdformule
     if (Object.keys(elementsCount).length === 0 && mainFormula.trim() !== '') {
         // Deze conditie vangt gevallen op waarbij de hoofdformule niet leeg was, maar geen elementen werden geparsed.
         // Dit kan duiden op een misvormde formule die de regex niet heeft opgevangen.
-        throw new Error('Ongeldige formule structuur voor hoofdverbinding. Controleer haakjes en symbolen.');
+        throw new Error('Kon formule niet parsen of resulteerde in 0 massa. Controleer haakjes en symbolen.');
     }
 
     return { mass: totalMass, error: '' };
@@ -575,7 +619,7 @@ export default function App() {
 
   return (
     <div className="flex flex-col h-screen bg-gray-100 font-sans">
-      {/* Navigatieknoppen */}
+      {/* Tailwind CSS CDN is verplaatst naar public/index.html */}
       <div className="flex justify-around py-2 bg-gray-200 border-b border-gray-300">
         <button 
             className={`py-2 px-4 rounded-lg ${activeScreen === 'table' ? 'bg-blue-500 text-white' : 'text-gray-800'}`} 
@@ -589,16 +633,8 @@ export default function App() {
         </button>
       </div>
 
-      {/* Hoofdinhoud container die flexibel is en scrollt */}
-      <main className="flex-1 overflow-auto">
-        {activeScreen === 'table' && <PeriodicTableScreen setSelectedElementForCalc={navigateToCalculatorWithElement} />}
-        {activeScreen === 'calculator' && <MolarMassCalculatorScreen initialFormula={formulaForCalculator} />}
-      </main>
-
-      {/* Voetnoot met auteursnaam, altijd onderaan */}
-      <footer className="w-full bg-gray-200 text-gray-600 text-center py-2 text-sm border-t border-gray-300 mt-auto">
-        <p>Gemaakt door: [Sven 'Tomtaru' Maesen]</p>
-      </footer>
+      {activeScreen === 'table' && <PeriodicTableScreen setSelectedElementForCalc={navigateToCalculatorWithElement} />}
+      {activeScreen === 'calculator' && <MolarMassCalculatorScreen initialFormula={formulaForCalculator} />}
     </div>
   );
 }
