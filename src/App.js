@@ -308,7 +308,7 @@ const MolarMassCalculatorScreen = ({ initialFormula = '' }) => {
     // Functie om de trivialNames.json data te laden via fetch
     const loadTrivialNames = async () => {
       try {
-        const response = await fetch('./data/trivialNames.json'); 
+        const response = await fetch('/trivialNames.json'); 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
