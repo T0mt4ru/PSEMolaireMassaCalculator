@@ -1,6 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import  trivialNames  from './data/trivialNames0.json'; // Importeer triviale namen
 
+const trivialNames = {};
+for (const formula in rawTrivialNamesData) {
+  if (Object.prototype.hasOwnProperty.call(rawTrivialNamesData, formula)) { // Goede gewoonte: controleer of de eigenschap van het object zelf is
+    const namesArray = rawTrivialNamesData[formula];
+    if (Array.isArray(namesArray)) {
+      namesArray.forEach(name => {
+        trivialNames[name.toLowerCase()] = formula; // Sla de namen in kleine letters op
+      });
+    }
+  }
+}
 // Data voor het periodiek systeem
 // Bron voor atoommassa's: IUPAC, afgerond voor eenvoud
 const elementsData = [  
