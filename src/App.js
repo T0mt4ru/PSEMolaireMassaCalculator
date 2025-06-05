@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import  rawTrivialNamesData  from './data/trivialNames0.json'; // Importeer triviale namen
+import  rawTrivialNamesData  from './data/trivialNames.json'; // Importeer triviale namen
 
 const trivialNames = {};
 for (const formula in rawTrivialNamesData) {
