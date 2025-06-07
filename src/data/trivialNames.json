@@ -1,69 +1,311 @@
 {
-  "H2O": ["water", "aqua"],
-  "NaCl": ["keukenzout", "zout", "tafelzout", "steenzout", "haliet"],
-  "CH4": ["methaan", "aardgas"],
-  "NH3": ["ammoniak", "ammonia"],
-  "CH3COCH3": ["aceton", "dimethylketon", "dmk"],
-  "CH3CH2OH": ["alcohol"],
-  "KAl(SO4)2.12H2O": ["aluin"],
-  "Al2O3": ["aluinaarde"],
-  "C8H8O3": ["amandelzuur"],
-  "C4H6O5": ["appelzuur"],
-  "CH3COOH": ["azijnzuur"],
-  "NaHCO3": ["bakpoeder", "dubbelkoolzure soda", "zuiveringszout"],
-  "C4H6O4": ["barnsteenzuur"],
-  "C7H6O2": ["benzoëzuur"],
-  "MgSO4": ["bitterzout"],
-  "NaClO": ["bleekwater"],
-  "Na2B4O7.10H2O": ["borax"],
-  "CH3(CH2)2COOH": ["boterzuur"],
-  "H2N(CH2)5NH2": ["cadaverine"],
-  "NaOH": ["caustic", "caustische soda"],
-  "C6H8O7": ["citroenzuur"],
-  "(C2H5)2O": ["ether"],
-  "H3PO4": ["fosforzuur"],
-  "H3PO3": ["fosforig zuur"],
-  "C10H14": ["dureen"],
-  "C8H6O4": ["ftaalzuur"],
-  "Ca(OH)2": ["gebluste kalk"],
-  "K4Fe(CN)6.3H2O": ["geel bloedloogzout"],
-  "HCl": ["geest van zout", "zoutgeest", "zoutzuur"],
-  "CaSO4": ["gips"],
-  "C2H4O3": ["glycolzuur"],
-  "AgNO3": ["helse steen"],
-  "CH3OH": ["houtgeest"],
-  "C9H10": ["indaan"],
-  "(CH3)2CHOH": ["ipa"],
-  "(CH3)3CH": ["isobutaan"],
-  "(CH3)3C-CH2CH(CH3)2": ["iso-octaan"],
-  "(CH3)2CHCH2CH2": ["isopentaan"],
-  "CaCO3": ["kalk"],
-  "C9H8O": ["kaneelaldehyde"],
-  "C6H5CH-CHCOOH": ["kaneelzuur"],
-  "CuSO4": ["kopervitriool"],
-  "H2CO3": ["koolzuurhoudend water", "koolzuur"],
-  "CH3COC2H5": ["mek"],
-  "HCOOH": ["mierenzuur"],
-  "CH3(CH=CH(CH2)7COOH": ["oleïnezuur", "oliezuur"],
-  "CaO": ["ongebluste kalk"],
-  "(COOH)2": ["oxaalzuur"],
-  "O3": ["ozon"],
-  "(CH3)2CHOHCHOH(CH3)2": ["pinacol"],
-  "(CH3)3CC(O)CH3": ["pinacolon"],
-  "K2CO3": ["potas"],
-  "CH3CH2COOH": ["propionzuur"],
-  "H2N(CH2)4NH2": ["putrescine"],
-  "K3[Fe(CN)6]": ["rood bloedloogzout"],
-  "HOC6H4COOH": ["salicylzuur"],
-  "NH4Cl": ["salmiak", "salmiakzout"],
-  "HNO3": ["salpeterzuur"],
-  "HNO2": ["salpeterig zuur"],
-  "Na2CO3.10H2O": ["soda"],
-  "CH3(CH2)16COOH": ["stearinezuur"],
-  "CH3C6H5": ["tolueen"],
-  "H2SO4": ["vitriool", "zwavelzuur"],
-  "NH4HCO3": ["vlugzout"],
-  "HOOC(CHOH)2COOH": ["wijnsteenzuur"],
-  "C6H4(CH3)2": ["xyleen"],
-  "H2SO3": ["zwavelig zuur"]
+  "AgNO3": [
+    "helse steen"
+  ],
+  "Al2O3": [
+    "aluinaarde"
+  ],
+  "CCl4": [
+    "tetrachloormethaan",
+    "tetra"
+  ],
+  "C2H4O3": [
+    "glycolzuur"
+  ],
+  "(C2H5)2O": [
+    "ether"
+  ],
+  "C4H6O4": [
+    "barnsteenzuur"
+  ],
+  "C4H6O5": [
+    "appelzuur"
+  ],
+  "C6H4(CH3)2": [
+    "xyleen"
+  ],
+  "C6H5": [
+    "fenol",
+    "phenol",
+    "hydroxybenzeen"
+  ],
+  "C6H5CH-CHCOOH": [
+    "kaneelzuur"
+  ],
+  "C6H5CH3": [
+    "tolueen",
+    "methylbenzeen"
+  ],
+  "C6H5(CH3)2": [
+    "dimethylbenzeen",
+    "orthodimethylbenzeen",
+    "ortho-dimethylbenzeen",
+    "metadimethylbenzeen",
+    "meta-dimethylbenzeen",
+    "paradimethylbenzeen",
+    "para-dimethylbenzeen",
+    "xyleen",
+    "orthoxyleen",
+    "ortho-xyleen",
+    "metaxyleen",
+    "meta-xyleen",
+    "paraxyleen",
+    "para-xyleen"
+  ],
+  "C6H5OCH3": [
+    "anisool"
+  ],
+  "C6H5OCH2CH3": [
+    "fenetool"
+  ],
+  "HO-(O=)C-CH2-C(C(=O)-OH)(-OH)-CH2-C(=0)-OH": [
+    "citroenzuur"
+  ],
+  "C7H6O2": [
+    "benzoëzuur"
+  ],
+  "C8H6O4": [
+    "ftaalzuur"
+  ],
+  "C8H8O3": [
+    "amandelzuur"
+  ],
+  "C9H8O": [
+    "kaneelaldehyde"
+  ],
+  "C9H10": [
+    "indaan"
+  ],
+  "C10H14": [
+    "dureen"
+  ],
+  "CHCl3":[
+    "trichloormethaan",
+    "chloroform",
+    "tri"
+  ],
+  "CHI3":[
+    "trijoodmethaan",
+    "jodoform"
+  ],
+  "CH3CH2COOH": [
+    "propionzuur"
+  ],
+  "CH3CH2OH": [
+    "alcohol"
+  ],
+  "CH3(CH2)2COOH": [
+    "boterzuur"
+  ],
+  "CH3(CH2)16COOH": [
+    "stearinezuur"
+  ],
+  "CH3(CH=CH(CH2)7COOH": [
+    "oleïnezuur",
+    "oliezuur"
+  ],
+  "CH3COC2H5": [
+    "mek"
+  ],
+  "CH3COCH3": [
+    "aceton",
+    "dimethylketon",
+    "dmk"
+  ],
+  "CH3COOH": [
+    "azijnzuur"
+  ],
+  "CH3OH": [
+    "houtgeest",
+    "methylalcohol",
+    "methyl alcohol",
+    "houtalcohol",
+    "hout alcohol",
+    "wood alcohol"
+  ],
+  "CH4": [
+    "methaan",
+    "aardgas"
+  ],
+  "(CH3)2CHCH2CH2": [
+    "isopentaan"
+  ],
+  "(CH3)2CHOH": [
+    "ipa"
+  ],
+  "(CH3)2CHOHCHOH(CH3)2": [
+    "pinacol"
+  ],
+  "(CH3)3C-CH2CH(CH3)2": [
+    "iso-octaan"
+  ],
+  "(CH3)3CC(O)CH3": [
+    "pinacolon"
+  ],
+  "(CH3)3CH": [
+    "isobutaan"
+  ],
+  "(COOH)2": [
+    "oxaalzuur"
+  ],
+  "CaC": [
+    "calciumcarbide",
+    "carbid"
+  ],
+  "CaCO3": [
+    "kalk"
+  ],
+  "CaF2":[
+    "calciumfluoride",
+    "fluoriet"
+  ],
+  "CaO": [
+    "ongebluste kalk"
+  ],
+  "Ca(OH)2": [
+    "gebluste kalk"
+  ],
+  "CaSO4": [
+    "gips"
+  ],
+  "CuSO4": [
+    "kopervitriool"
+  ],
+  "Fe(NH4)2(SO4)2.6H2O": [
+    "mohr's zout"
+  ],
+  "H2CO3": [
+    "koolzuurhoudend water",
+    "koolzuur"
+  ],
+  "H2N(CH2)4NH2": [
+    "putrescine"
+  ],
+  "H2N(CH2)5NH2": [
+    "cadaverine"
+  ],
+  "H2N-C(=O)-NH2": [
+    "diaminomethanal",
+    "ureum"
+  ],
+  "H2O": [
+    "water",
+    "aqua"
+  ],
+  "H2SO3": [
+    "zwavelig zuur",
+    "zwaveligzuur"
+  ],
+  "H2SO4": [
+    "vitriool",
+    "zwavelzuur"
+  ],
+  "H3PO3": [
+    "fosforig zuur",
+    "fosforigzuur"
+  ],
+  "H3PO4": [
+    "fosforzuur"
+  ],
+  "HCOOH": [
+    "mierenzuur"
+  ],
+  "HCl": [
+    "waterstofchloride",
+    "geest van zout",
+    "zoutgeest",
+    "zoutzuur"
+  ],
+  "Hg2Cl2": [
+    "kwik(I)chloride",
+    "calomel"
+  ],
+  "HgS": [
+    "kwik(II)sulfide",
+    "vermiljoen"
+  ],
+  "HNO2": [
+    "salpeterig zuur"
+  ],
+  "HNO3": [
+    "salpeterzuur"
+  ],
+  "HOC6H4COOH": [
+    "salicylzuur"
+  ],
+  "HO(CH2)2OH": [
+    "glycol"
+  ],
+  "HOCH2CH(OH)CH2OH": [
+    "glycerol"
+  ],
+  "HOOC(CHOH)2COOH": [
+    "wijnsteenzuur"
+  ],
+  "K2CO3": [
+    "potas"
+  ],
+  "KCl": [
+    "kaliumchloride",
+    "sylviet"
+  ],
+  "K3[Fe(CN)6]": [
+    "rood bloedloogzout"
+  ],
+  "K4Fe(CN)6.3H2O": [
+    "geel bloedloogzout"
+  ],
+  "KAl(SO4)2.12H2O": [
+    "aluin"
+  ],
+  "KOH": [
+    "kaliloog"
+  ],
+  "MgSO4": [
+    "bitterzout"
+  ],
+  "NH3": [
+    "ammoniak",
+    "ammonia"
+  ],
+  "NH4Cl": [
+    "salmiak",
+    "salmiakzout"
+  ],
+  "NH4HCO3": [
+    "vlugzout"
+  ],
+  "Na2B4O7.10H2O": [
+    "borax"
+  ],
+  "Na2CO3.10H2O": [
+    "soda"
+  ],
+  "NaCl": [
+    "natriumchloride",
+    "keukenzout",
+    "zout",
+    "tafelzout",
+    "steenzout",
+    "haliet"
+  ],
+  "NaClO": [
+    "bleekwater"
+  ],
+  "NaHCO3": [
+    "bakpoeder",
+    "dubbelkoolzure soda",
+    "zuiveringszout"
+  ],
+  "NaOH": [
+    "caustic",
+    "caustische soda",
+    "natronloog"
+  ],
+  "O3": [
+    "ozon"
+  ],
+  "O=CHCH3" : [
+    "ethanal"
+  ]
 }
