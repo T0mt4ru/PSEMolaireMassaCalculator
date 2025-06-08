@@ -13,6 +13,15 @@ import rawTrivialNamesData from './data/trivialNames.json';
      }
    }
  }
+ // Draai de trivialNames map om voor snelle lookup van namen per formule.
+// En voor de suggesties hebben we de namen zelf nodig.
+const trivialFormulasToNames = {}; // Niet direct gebruikt, maar handig voor omgekeerde lookup
+for (const formula in rawTrivialNamesData) {
+    if (Object.prototype.hasOwnProperty.call(rawTrivialNamesData, formula)) {
+        trivialFormulasToNames[formula] = rawTrivialNamesData[formula];
+    }
+}
+const allTrivialNames = Object.values(rawTrivialNamesData).flat().map(name => name.toLowerCase());
 
 // Data voor het periodiek systeem
 // Bron voor atoommassa's: IUPAC, afgerond voor eenvoud
@@ -316,7 +325,8 @@ const MolarMassCalculatorScreen = ({ initialFormula = '' }) => {
   const [trivialNameInput, setTrivialNameInput] = useState('');
   const [molarMass, setMolarMass] = useState(null);
   const [calculationError, setCalculationError] = useState('');
-  const [elementalBreakdown, setElementalBreakdown] = useState(null); // Nieuwe staat voor elementaire samenstelling
+  const [elementalBreakdown, setElementalBreakdown] = useState(null);
+  const [nameSuggestions, setNameSuggestions] = useState([]);
 
   // Kleuren voor de pie chart
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A28DFF', '#FF6B6B', '#6BD8FF'];
@@ -324,14 +334,14 @@ const MolarMassCalculatorScreen = ({ initialFormula = '' }) => {
   useEffect(() => {
     if (initialFormula) {
         setFormulaInput(initialFormula);
-        handleCalculateFromFormula(initialFormula); // Bereken direct als er een initiële formule is
+        handleCalculateFromFormula(initialFormula);
     }
   }, [initialFormula]);
 
 
   // Functie om de brutoformule te parsen en molaire massa te berekenen
   const calculateMolarMass = (formula) => {
-    if (!formula) return { mass: 0, error: '', composition: {} }; // Return lege compositie
+    if (!formula) return { mass: 0, error: '', composition: {} };
 
     let totalMass = 0;
     const elementsCount = {};
@@ -505,25 +515,54 @@ const MolarMassCalculatorScreen = ({ initialFormula = '' }) => {
     }
   };
 
-  const handleCalculate = () => {
-    handleCalculateFromFormula(formulaInput);
-  };
-
-
+  // NIEUW: Functie voor het zoeken op triviale naam
   const handleTrivialNameLookup = () => {
     setMolarMass(null);
     setCalculationError('');
-    setElementalBreakdown(null); // Reset elementaire samenstelling
-    // Converteer de invoer naar kleine letters voor case-insensitive lookup
+    setElementalBreakdown(null);
     const normalizedInput = trivialNameInput.trim().toLowerCase();
     const formula = trivialNames[normalizedInput];
     if (formula) {
       setFormulaInput(formula); // Update ook het formule-invoerveld
       handleCalculateFromFormula(formula);
+      setCalculationError(''); // Wis eerdere fouten na succesvolle lookup
     } else if (trivialNameInput.trim() !== '') {
-      setCalculationError(`Triviale naam "${trivialNameInput}" niet gevonden!)`);
+      setCalculationError(`Triviale naam "${trivialNameInput}" niet gevonden.`);
     } else {
       setCalculationError('Voer een triviale naam in.');
+    }
+  };
+
+  // Functie om suggesties te genereren
+  const getSuggestions = (input) => {
+    if (input.length < 1) {
+      return [];
+    }
+    const lowerInput = input.toLowerCase();
+    const filteredSuggestions = allTrivialNames.filter(name =>
+      name.startsWith(lowerInput)
+    ).slice(0, 5);
+    return filteredSuggestions;
+  };
+
+  // Handler voor verandering in triviale naam invoer
+  const handleTrivialNameInputChange = (e) => {
+    const value = e.target.value;
+    setTrivialNameInput(value);
+    setNameSuggestions(getSuggestions(value));
+  };
+
+  // Handler voor het selecteren van een suggestie
+  const handleSuggestionClick = (suggestion) => {
+    setTrivialNameInput(suggestion);
+    setNameSuggestions([]); // Wis de suggesties na selectie
+    const formula = trivialNames[suggestion.toLowerCase()];
+    if (formula) {
+      setFormulaInput(formula);
+      handleCalculateFromFormula(formula);
+      setCalculationError(''); // Wis eerdere fouten na succesvolle selectie
+    } else {
+        setCalculationError(`Formule voor "${suggestion}" niet gevonden.`);
     }
   };
 
@@ -549,15 +588,34 @@ const MolarMassCalculatorScreen = ({ initialFormula = '' }) => {
     <div className="flex-1 p-4 overflow-auto">
       <h1 className="text-2xl font-bold mb-5 text-center text-gray-900">Molaire Massa Calculator</h1>
 
-      <div className="mb-5">
+      <div className="mb-5 relative">
         <label className="block text-base mb-2 text-gray-700 font-medium">Zoek op triviale naam:</label>
         <input
           className="bg-white border border-gray-300 rounded-lg px-3 py-2 text-base mb-3 text-gray-900 w-full"
           placeholder="bv. Water, Zoutzuur"
           value={trivialNameInput}
-          onChange={(e) => setTrivialNameInput(e.target.value)}
+          onChange={handleTrivialNameInputChange}
           autoCapitalize="words"
+          onBlur={() => setTimeout(() => setNameSuggestions([]), 100)}
+          onKeyDown={(e) => { // NIEUW: onKeyDown handler voor Enter
+            if (e.key === 'Enter') {
+              handleTrivialNameLookup();
+            }
+          }}
         />
+        {nameSuggestions.length > 0 && (
+          <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-lg shadow-lg mt-1 max-h-48 overflow-y-auto">
+            {nameSuggestions.map((suggestion, index) => (
+              <li 
+                key={index} 
+                className="px-3 py-2 cursor-pointer hover:bg-gray-100 text-gray-900"
+                onMouseDown={() => handleSuggestionClick(suggestion)}
+              >
+                {suggestion}
+              </li>
+            ))}
+          </ul>
+        )}
         <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg" onClick={handleTrivialNameLookup}>Zoek Triviale Naam</button>
       </div>
 
@@ -578,8 +636,13 @@ const MolarMassCalculatorScreen = ({ initialFormula = '' }) => {
           }}
           autoCapitalize="none"
           autoCorrect="off"
+          onKeyDown={(e) => { // NIEUW: onKeyDown handler voor Enter
+            if (e.key === 'Enter') {
+              handleCalculateFromFormula(formulaInput);
+            }
+          }}
         />
-        <button className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg" onClick={handleCalculate}>Bereken Molaire Massa</button>
+        <button className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg" onClick={() => handleCalculateFromFormula(formulaInput)}>Bereken Molaire Massa</button>
       </div>
 
       {molarMass !== null && (
@@ -611,7 +674,7 @@ const MolarMassCalculatorScreen = ({ initialFormula = '' }) => {
                                 nameKey="name"
                                 cx="50%"
                                 cy="50%"
-                                outerRadius="80%"
+                                outerRadius="70%"
                                 fill="#8884d8"
                                 label={({ name, percent }) => `${name} (${(percent * 100).toFixed(1)}%)`} 
                                 labelLine={true}
@@ -638,7 +701,7 @@ const MolarMassCalculatorScreen = ({ initialFormula = '' }) => {
                                 nameKey="name"
                                 cx="50%"
                                 cy="50%"
-                                outerRadius="80%"
+                                outerRadius="70%"
                                 fill="#8884d8"
                                 label={({ name, percent }) => `${name} (${(percent * 100).toFixed(1)}%)`} 
                                 labelLine={true}
@@ -662,21 +725,21 @@ const MolarMassCalculatorScreen = ({ initialFormula = '' }) => {
                   <th className="py-2 px-3 text-left border-b border-gray-300">Atoom</th>
                   <th className="py-2 px-3 text-left border-b border-gray-300">Aantal</th>
                   <th className="py-2 px-3 text-left border-b border-gray-300">Molaire Massa (g/mol)</th>
-                  <th className="py-2 px-3 text-left border-b border-gray-300">Atoompercentage</th> {/* Hernoemd */}
-                  <th className="py-2 px-3 text-left border-b border-gray-300">Massapercentage</th> {/* Nieuw */}
+                  <th className="py-2 px-3 text-left border-b border-gray-300">Atoompercentage</th>
+                  <th className="py-2 px-3 text-left border-b border-gray-300">Massapercentage</th>
                 </tr>
               </thead>
-              <tbody>{/* Removed whitespace here */}
+              <tbody>
                 {elementalBreakdown.map((element, index) => (
                   <tr key={element.name} className="border-b border-gray-200 hover:bg-gray-50">
                     <td className="py-2 px-3 text-left">{element.name}</td>
                     <td className="py-2 px-3 text-left">{element.count}</td>
                     <td className="py-2 px-3 text-left">{element.molarMassContribution}</td>
-                    <td className="py-2 px-3 text-left">{element.atomicPercentage}%</td> {/* Gebruikt atomicPercentage */}
-                    <td className="py-2 px-3 text-left">{element.massPercentage}%</td> {/* Nieuw */}
+                    <td className="py-2 px-3 text-left">{element.atomicPercentage}%</td>
+                    <td className="py-2 px-3 text-left">{element.massPercentage}%</td>
                   </tr>
                 ))}
-              </tbody>{/* Removed whitespace here */}
+              </tbody>
             </table>
           </div>
         </div>
