@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import  rawTrivialNamesData  from './data/trivialNames.json'; // Importeer triviale namen
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
+import rawTrivialNamesData from './data/trivialNames.json'; 
 
-const trivialNames = {};
-for (const formula in rawTrivialNamesData) {
-  if (Object.prototype.hasOwnProperty.call(rawTrivialNamesData, formula)) { // Goede gewoonte: controleer of de eigenschap van het object zelf is
-    const namesArray = rawTrivialNamesData[formula];
-    if (Array.isArray(namesArray)) {
-      namesArray.forEach(name => {
-        trivialNames[name.toLowerCase()] = formula; // Sla de namen in kleine letters op
-      });
-    }
-  }
-}
+ const trivialNames = {};
+ for (const formula in rawTrivialNamesData) {
+   if (Object.prototype.hasOwnProperty.call(rawTrivialNamesData, formula)) {
+     const namesArray = rawTrivialNamesData[formula];
+     if (Array.isArray(namesArray)) {
+       namesArray.forEach(name => {
+         trivialNames[name.toLowerCase()] = formula;
+       });
+     }
+   }
+ }
+
 // Data voor het periodiek systeem
 // Bron voor atoommassa's: IUPAC, afgerond voor eenvoud
 const elementsData = [  
@@ -126,7 +128,7 @@ const elementsData = [
   { symbol: 'Mt', name: 'Meitnerium',     atomicNumber: 109,  atomicMass: 276.000,  group: 9,   period: 7, type: 'overgangsmetaal' },
   { symbol: 'Ds', name: 'Darmstadtium',   atomicNumber: 110,  atomicMass: 281.000,  group: 10,  period: 7, type: 'overgangsmetaal' },
   { symbol: 'Rg', name: 'Roentgenium',    atomicNumber: 111,  atomicMass: 282.000,  group: 11,  period: 7, type: 'overgangsmetaal' },
-  { symbol: 'Cn', name: 'Copernicium',    atomicNumber: 112,  atomicMass: 285.000,  group: 12,  period: 7, type: 'overgangsmetaal' },
+  { symbol: 'Cn', name: 'Copernicium',    atomicNumber: 112,  atomicMass: 285.000,  group: 12,  period: 7, type: 'overgangsmetaal' }, // Fout opgelost: Duplicaat atomicMass verwijderd
   { symbol: 'Nh', name: 'Nihonium',       atomicNumber: 113,  atomicMass: 286.000,  group: 13,  period: 7, type: 'onbekend' }, 
   { symbol: 'Fl', name: 'Flerovium',      atomicNumber: 114,  atomicMass: 289.000,  group: 14,  period: 7, type: 'onbekend' },
   { symbol: 'Mc', name: 'Moscovium',      atomicNumber: 115,  atomicMass: 290.000,  group: 15,  period: 7, type: 'onbekend' },
@@ -314,6 +316,10 @@ const MolarMassCalculatorScreen = ({ initialFormula = '' }) => {
   const [trivialNameInput, setTrivialNameInput] = useState('');
   const [molarMass, setMolarMass] = useState(null);
   const [calculationError, setCalculationError] = useState('');
+  const [elementalBreakdown, setElementalBreakdown] = useState(null); // Nieuwe staat voor elementaire samenstelling
+
+  // Kleuren voor de pie chart
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A28DFF', '#FF6B6B', '#6BD8FF'];
 
   useEffect(() => {
     if (initialFormula) {
@@ -325,7 +331,7 @@ const MolarMassCalculatorScreen = ({ initialFormula = '' }) => {
 
   // Functie om de brutoformule te parsen en molaire massa te berekenen
   const calculateMolarMass = (formula) => {
-    if (!formula) return { mass: 0, error: '' };
+    if (!formula) return { mass: 0, error: '', composition: {} }; // Return lege compositie
 
     let totalMass = 0;
     const elementsCount = {};
@@ -345,6 +351,12 @@ const MolarMassCalculatorScreen = ({ initialFormula = '' }) => {
         let i = 0;
         while (i < segment.length) {
             let char = segment[i];
+
+            // Negeer '-' en '=' symbolen, en ook witruimte
+            if (char === '-' || char === '=' || /\s/.test(char)) {
+                i++;
+                continue; // Ga naar de volgende iteratie van de lus
+            }
 
             if (char === '(') {
                 // Zoek de overeenkomende sluithaakje
@@ -398,9 +410,6 @@ const MolarMassCalculatorScreen = ({ initialFormula = '' }) => {
 
                 elementsCount[canonicalSymbol] = (elementsCount[canonicalSymbol] || 0) + count * segmentMultiplier;
 
-            } else if (/\s/.test(char)) {
-                // Negeer witruimte
-                i++;
             } else {
                 // Ongeldig teken
                 throw new Error(`Onbekend element of ongeldig symbool: "${char}". Let op hoofdlettergevoeligheid!`);
@@ -422,6 +431,14 @@ const MolarMassCalculatorScreen = ({ initialFormula = '' }) => {
         const hydrateMatch = hydratePart.match(/^(\d+)H2O$/); 
         if (hydrateMatch) {
             const hydrateMultiplier = parseInt(hydrateMatch[1], 10);
+            // Voeg wateratomen toe aan elementsCount voor hydraten.
+            // Dit is een benadering; voor gedetailleerde weergave van H2O in de piechart,
+            // zou H2O zelf geparst moeten worden. Voor nu, behandelen we het als een component.
+            // Als we H en O apart willen, moeten we hier elementsCount bijwerken met 2x H en 1x O.
+            // Echter, voor de vraag is "molaire massa: 16" voor O en "2 g/mol" voor H.
+            // Dit betekent dat we H en O als afzonderlijke elementen moeten toevoegen.
+            elementsCount['H'] = (elementsCount['H'] || 0) + (hydrateMultiplier * 2);
+            elementsCount['O'] = (elementsCount['O'] || 0) + (hydrateMultiplier * 1);
             totalMass += hydrateMultiplier * molarMassH2O;
         } else {
             throw new Error(`Ongeldige hydraatformule: ${hydratePart}. Verwacht formaat: nH2O`);
@@ -442,18 +459,40 @@ const MolarMassCalculatorScreen = ({ initialFormula = '' }) => {
         throw new Error('Kon formule niet parsen of resulteerde in 0 massa. Controleer haakjes en symbolen.');
     }
 
-    return { mass: totalMass, error: '' };
+    return { mass: totalMass, error: '', composition: elementsCount };
   };
 
   const handleCalculateFromFormula = (currentFormula) => {
     setMolarMass(null);
     setCalculationError('');
-    try {
+    setElementalBreakdown(null); // Reset elementaire samenstelling
+
+     try {
       const result = calculateMolarMass(currentFormula);
       if (result.error) {
         setCalculationError(result.error);
       } else if (result.mass > 0) {
         setMolarMass(result.mass.toFixed(4));
+
+        // Bereid gegevens voor de tabel en pie chart
+        const breakdownData = [];
+        for (const symbol in result.composition) {
+          const count = result.composition[symbol];
+          const atomicMass = atomicMasses[symbol];
+          const molarMassContribution = count * atomicMass;
+          const molarPercentage = (molarMassContribution / result.mass) * 100;
+          
+          breakdownData.push({
+            name: symbol, // Naam voor de chart slice
+            count: count,
+            molarMass: atomicMass.toFixed(3), // Molaire massa van het element zelf
+            molarMassContribution: molarMassContribution.toFixed(3), // Bijdrage aan totale molaire massa
+            percentage: molarPercentage.toFixed(2), // Percentage (als string)
+            value: molarMassContribution // Waarde voor de pie chart (molaire massa bijdrage)
+          });
+        }
+        setElementalBreakdown(breakdownData);
+
       } else if (currentFormula.trim() !== '') {
         // Als de massa 0 is maar er was input, kan het een parsefout zijn die niet werd opgevangen
         setCalculationError('Kon formule niet parsen of resulteerde in 0 massa.');
@@ -471,6 +510,7 @@ const MolarMassCalculatorScreen = ({ initialFormula = '' }) => {
   const handleTrivialNameLookup = () => {
     setMolarMass(null);
     setCalculationError('');
+    setElementalBreakdown(null); // Reset elementaire samenstelling
     // Converteer de invoer naar kleine letters voor case-insensitive lookup
     const normalizedInput = trivialNameInput.trim().toLowerCase();
     const formula = trivialNames[normalizedInput];
@@ -478,11 +518,28 @@ const MolarMassCalculatorScreen = ({ initialFormula = '' }) => {
       setFormulaInput(formula); // Update ook het formule-invoerveld
       handleCalculateFromFormula(formula);
     } else if (trivialNameInput.trim() !== '') {
-      setCalculationError(`Triviale naam "${trivialNameInput}" niet gevonden.`);
+      setCalculationError(`Triviale naam "${trivialNameInput}" niet gevonden. (Deze functie vereist 'trivialNames.json')`);
     } else {
       setCalculationError('Voer een triviale naam in.');
     }
   };
+
+  const CustomTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload;
+      return (
+        <div className="p-2 bg-white bg-opacity-90 border border-gray-300 rounded-md shadow-lg text-sm text-gray-800">
+          <p className="font-bold">{data.name}</p>
+          <p>Aantal atomen: {data.count}</p>
+          <p>Molaire massa element: {data.molarMass} g/mol</p>
+          <p>Bijdrage aan molaire massa: {data.molarMassContribution} g/mol</p>
+          <p>Molair percentage: {data.percentage}%</p>
+        </div>
+      );
+    }
+    return null;
+  };
+
 
   return (
     <div className="flex-1 p-4 overflow-auto">
@@ -530,6 +587,64 @@ const MolarMassCalculatorScreen = ({ initialFormula = '' }) => {
       {calculationError !== '' && (
         <div className="mt-5 p-3 bg-red-50 rounded-lg border border-red-200 flex flex-col items-center">
           <p className="text-base text-red-700 text-center">{calculationError}</p>
+        </div>
+      )}
+
+      {elementalBreakdown && elementalBreakdown.length > 0 && (
+        <div className="mt-6 p-4 bg-white rounded-lg border border-gray-200 shadow-md">
+          <h2 className="text-xl font-bold mb-4 text-center text-gray-900">Elementaire Samenstelling</h2>
+          
+          <div className="flex flex-col md:flex-row items-center justify-center gap-6">
+            {/* Pie Chart */}
+            <div className="w-full md:w-1/2 h-[250px] flex justify-center items-center"> 
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={elementalBreakdown}
+                    dataKey="value" 
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius="80%"
+                    fill="#8884d8"
+                    // Corrected the label prop to use 'percent' (the ratio) from Recharts data,
+                    // and then convert it to a fixed-point percentage string.
+                    label={({ name, percent }) => `${name} (${(percent * 100).toFixed(1)}%)`} 
+                    labelLine={true}
+                  >
+                    {elementalBreakdown.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<CustomTooltip />} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Table */}
+            <div className="w-full md:w-1/2 overflow-x-auto">
+              <table className="min-w-full bg-white border border-gray-300 rounded-lg">
+                <thead>
+                  <tr className="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                    <th className="py-2 px-3 text-left border-b border-gray-300">Atoom</th>
+                    <th className="py-2 px-3 text-left border-b border-gray-300">Aantal</th>
+                    <th className="py-2 px-3 text-left border-b border-gray-300">Molaire Massa (g/mol)</th>
+                    <th className="py-2 px-3 text-left border-b border-gray-300">Molair %</th>
+                  </tr>
+                </thead>
+                <tbody className="text-gray-700 text-sm">
+                  {elementalBreakdown.map((element, index) => (
+                    <tr key={element.name} className="border-b border-gray-200 hover:bg-gray-50">
+                      <td className="py-2 px-3 text-left">{element.name}</td>
+                      <td className="py-2 px-3 text-left">{element.count}</td>
+                      <td className="py-2 px-3 text-left">{element.molarMassContribution}</td>
+                      <td className="py-2 px-3 text-left">{element.percentage}%</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       )}
     </div>

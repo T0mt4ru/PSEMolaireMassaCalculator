@@ -91,28 +91,28 @@
   "CH3CH2COOH": [
     "propionzuur"
   ],
-  "CH3CH2OH": [
+  "CH3CH2-OH": [
     "alcohol"
   ],
-  "CH3(CH2)2COOH": [
+  "CH3-(CH2)2-C(=O)OH": [
     "boterzuur"
   ],
-  "CH3(CH2)16COOH": [
+  "CH3(CH2)16-C(=O)OH": [
     "stearinezuur"
   ],
-  "CH3(CH=CH(CH2)7COOH": [
+  "CH3(CH=CH(CH2)7C(=O)OH": [
     "oleïnezuur",
     "oliezuur"
   ],
-  "CH3COC2H5": [
+  "CH3C(=O)C2H5": [
     "mek"
   ],
-  "CH3COCH3": [
+  "CH3C(=O)CH3": [
     "aceton",
     "dimethylketon",
     "dmk"
   ],
-  "CH3COOH": [
+  "CH3C(=O)OH": [
     "azijnzuur"
   ],
   "CH3OH": [
@@ -127,11 +127,13 @@
     "methaan",
     "aardgas"
   ],
-  "(CH3)2CHCH2CH2": [
+  "(CH3)2CHCH2CH3": [
     "isopentaan"
   ],
   "(CH3)2CHOH": [
-    "ipa"
+    "ipa",
+    "isopropanol",
+    "isopropyl alcohol"
   ],
   "(CH3)2CHOHCHOH(CH3)2": [
     "pinacol"
@@ -184,7 +186,7 @@
   "H2N(CH2)5NH2": [
     "cadaverine"
   ],
-  "H2N-C(=O)-NH2": [
+  "H2NC(O)NH2": [
     "diaminomethanal",
     "ureum"
   ],
