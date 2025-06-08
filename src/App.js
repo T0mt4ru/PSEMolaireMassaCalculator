@@ -128,7 +128,7 @@ const elementsData = [
   { symbol: 'Mt', name: 'Meitnerium',     atomicNumber: 109,  atomicMass: 276.000,  group: 9,   period: 7, type: 'overgangsmetaal' },
   { symbol: 'Ds', name: 'Darmstadtium',   atomicNumber: 110,  atomicMass: 281.000,  group: 10,  period: 7, type: 'overgangsmetaal' },
   { symbol: 'Rg', name: 'Roentgenium',    atomicNumber: 111,  atomicMass: 282.000,  group: 11,  period: 7, type: 'overgangsmetaal' },
-  { symbol: 'Cn', name: 'Copernicium',    atomicNumber: 112,  atomicMass: 285.000,  group: 12,  period: 7, type: 'overgangsmetaal' }, // Fout opgelost: Duplicaat atomicMass verwijderd
+  { symbol: 'Cn', name: 'Copernicium',    atomicNumber: 112,  atomicMass: 285.000,  group: 12,  period: 7, type: 'overgangsmetaal' },
   { symbol: 'Nh', name: 'Nihonium',       atomicNumber: 113,  atomicMass: 286.000,  group: 13,  period: 7, type: 'onbekend' }, 
   { symbol: 'Fl', name: 'Flerovium',      atomicNumber: 114,  atomicMass: 289.000,  group: 14,  period: 7, type: 'onbekend' },
   { symbol: 'Mc', name: 'Moscovium',      atomicNumber: 115,  atomicMass: 290.000,  group: 15,  period: 7, type: 'onbekend' },
@@ -431,12 +431,6 @@ const MolarMassCalculatorScreen = ({ initialFormula = '' }) => {
         const hydrateMatch = hydratePart.match(/^(\d+)H2O$/); 
         if (hydrateMatch) {
             const hydrateMultiplier = parseInt(hydrateMatch[1], 10);
-            // Voeg wateratomen toe aan elementsCount voor hydraten.
-            // Dit is een benadering; voor gedetailleerde weergave van H2O in de piechart,
-            // zou H2O zelf geparst moeten worden. Voor nu, behandelen we het als een component.
-            // Als we H en O apart willen, moeten we hier elementsCount bijwerken met 2x H en 1x O.
-            // Echter, voor de vraag is "molaire massa: 16" voor O en "2 g/mol" voor H.
-            // Dit betekent dat we H en O als afzonderlijke elementen moeten toevoegen.
             elementsCount['H'] = (elementsCount['H'] || 0) + (hydrateMultiplier * 2);
             elementsCount['O'] = (elementsCount['O'] || 0) + (hydrateMultiplier * 1);
             totalMass += hydrateMultiplier * molarMassH2O;
@@ -467,28 +461,37 @@ const MolarMassCalculatorScreen = ({ initialFormula = '' }) => {
     setCalculationError('');
     setElementalBreakdown(null); // Reset elementaire samenstelling
 
-     try {
+    try {
       const result = calculateMolarMass(currentFormula);
       if (result.error) {
         setCalculationError(result.error);
       } else if (result.mass > 0) {
         setMolarMass(result.mass.toFixed(4));
 
-        // Bereid gegevens voor de tabel en pie chart
+        // Bereid gegevens voor de tabel en charts
         const breakdownData = [];
+        let totalAtoms = 0;
+        for (const symbol in result.composition) {
+            totalAtoms += result.composition[symbol];
+        }
+
         for (const symbol in result.composition) {
           const count = result.composition[symbol];
           const atomicMass = atomicMasses[symbol];
           const molarMassContribution = count * atomicMass;
-          const molarPercentage = (molarMassContribution / result.mass) * 100;
+          
+          const atomicPercentage = (count / totalAtoms) * 100; // Atoompercentage
+          const massPercentage = (molarMassContribution / result.mass) * 100; // Massapercentage
           
           breakdownData.push({
             name: symbol, // Naam voor de chart slice
             count: count,
             molarMass: atomicMass.toFixed(3), // Molaire massa van het element zelf
             molarMassContribution: molarMassContribution.toFixed(3), // Bijdrage aan totale molaire massa
-            percentage: molarPercentage.toFixed(2), // Percentage (als string)
-            value: molarMassContribution // Waarde voor de pie chart (molaire massa bijdrage)
+            atomicPercentage: atomicPercentage.toFixed(2), // Atoompercentage als string
+            massPercentage: massPercentage.toFixed(2), // Massapercentage als string
+            atomicValue: count, // Waarde voor atoompercentage pie chart
+            massValue: molarMassContribution // Waarde voor massapercentage pie chart
           });
         }
         setElementalBreakdown(breakdownData);
@@ -518,13 +521,13 @@ const MolarMassCalculatorScreen = ({ initialFormula = '' }) => {
       setFormulaInput(formula); // Update ook het formule-invoerveld
       handleCalculateFromFormula(formula);
     } else if (trivialNameInput.trim() !== '') {
-      setCalculationError(`Triviale naam "${trivialNameInput}" niet gevonden. (Deze functie vereist 'trivialNames.json')`);
+      setCalculationError(`Triviale naam "${trivialNameInput}" niet gevonden!)`);
     } else {
       setCalculationError('Voer een triviale naam in.');
     }
   };
 
-  const CustomTooltip = ({ active, payload }) => {
+  const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
@@ -533,7 +536,8 @@ const MolarMassCalculatorScreen = ({ initialFormula = '' }) => {
           <p>Aantal atomen: {data.count}</p>
           <p>Molaire massa element: {data.molarMass} g/mol</p>
           <p>Bijdrage aan molaire massa: {data.molarMassContribution} g/mol</p>
-          <p>Molair percentage: {data.percentage}%</p>
+          <p>Atoompercentage: {data.atomicPercentage}%</p>
+          <p>Massapercentage: {data.massPercentage}%</p>
         </div>
       );
     }
@@ -594,56 +598,86 @@ const MolarMassCalculatorScreen = ({ initialFormula = '' }) => {
         <div className="mt-6 p-4 bg-white rounded-lg border border-gray-200 shadow-md">
           <h2 className="text-xl font-bold mb-4 text-center text-gray-900">Elementaire Samenstelling</h2>
           
-          <div className="flex flex-col md:flex-row items-center justify-center gap-6">
-            {/* Pie Chart */}
-            <div className="w-full md:w-1/2 h-[250px] flex justify-center items-center"> 
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={elementalBreakdown}
-                    dataKey="value" 
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius="80%"
-                    fill="#8884d8"
-                    // Corrected the label prop to use 'percent' (the ratio) from Recharts data,
-                    // and then convert it to a fixed-point percentage string.
-                    label={({ name, percent }) => `${name} (${(percent * 100).toFixed(1)}%)`} 
-                    labelLine={true}
-                  >
-                    {elementalBreakdown.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<CustomTooltip />} />
-                </PieChart>
-              </ResponsiveContainer>
+          <div className="flex flex-col lg:flex-row items-center justify-center gap-6 mb-8">
+            {/* Atoompercentage Sectie */}
+            <div className="w-full lg:w-1/2 flex flex-col items-center">
+                <h3 className="text-lg font-semibold mb-3 text-gray-800">Atoompercentage</h3>
+                <div className="w-full h-[250px] flex justify-center items-center"> 
+                    <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                            <Pie
+                                data={elementalBreakdown}
+                                dataKey="atomicValue" // Gebruik count voor atoompercentage
+                                nameKey="name"
+                                cx="50%"
+                                cy="50%"
+                                outerRadius="80%"
+                                fill="#8884d8"
+                                label={({ name, percent }) => `${name} (${(percent * 100).toFixed(1)}%)`} 
+                                labelLine={true}
+                            >
+                                {elementalBreakdown.map((entry, index) => (
+                                    <Cell key={`atom-cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                ))}
+                            </Pie>
+                            <Tooltip content={<CustomTooltip />} />
+                        </PieChart>
+                    </ResponsiveContainer>
+                </div>
             </div>
 
-            {/* Table */}
-            <div className="w-full md:w-1/2 overflow-x-auto">
-              <table className="min-w-full bg-white border border-gray-300 rounded-lg">
-                <thead>
-                  <tr className="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
-                    <th className="py-2 px-3 text-left border-b border-gray-300">Atoom</th>
-                    <th className="py-2 px-3 text-left border-b border-gray-300">Aantal</th>
-                    <th className="py-2 px-3 text-left border-b border-gray-300">Molaire Massa (g/mol)</th>
-                    <th className="py-2 px-3 text-left border-b border-gray-300">Molair %</th>
-                  </tr>
-                </thead>
-                <tbody className="text-gray-700 text-sm">
-                  {elementalBreakdown.map((element, index) => (
-                    <tr key={element.name} className="border-b border-gray-200 hover:bg-gray-50">
-                      <td className="py-2 px-3 text-left">{element.name}</td>
-                      <td className="py-2 px-3 text-left">{element.count}</td>
-                      <td className="py-2 px-3 text-left">{element.molarMassContribution}</td>
-                      <td className="py-2 px-3 text-left">{element.percentage}%</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            {/* Massapercentage Sectie */}
+            <div className="w-full lg:w-1/2 flex flex-col items-center">
+                <h3 className="text-lg font-semibold mb-3 text-gray-800">Massapercentage</h3>
+                <div className="w-full h-[250px] flex justify-center items-center"> 
+                    <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                            <Pie
+                                data={elementalBreakdown}
+                                dataKey="massValue" // Gebruik molarMassContribution voor massapercentage
+                                nameKey="name"
+                                cx="50%"
+                                cy="50%"
+                                outerRadius="80%"
+                                fill="#8884d8"
+                                label={({ name, percent }) => `${name} (${(percent * 100).toFixed(1)}%)`} 
+                                labelLine={true}
+                            >
+                                {elementalBreakdown.map((entry, index) => (
+                                    <Cell key={`mass-cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                ))}
+                            </Pie>
+                            <Tooltip content={<CustomTooltip />} />
+                        </PieChart>
+                    </ResponsiveContainer>
+                </div>
             </div>
+          </div> {/* Einde flex container voor charts */}
+
+          {/* Table */}
+          <div className="w-full overflow-x-auto mt-4">
+            <table className="min-w-full bg-white border border-gray-300 rounded-lg">
+              <thead>
+                <tr className="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                  <th className="py-2 px-3 text-left border-b border-gray-300">Atoom</th>
+                  <th className="py-2 px-3 text-left border-b border-gray-300">Aantal</th>
+                  <th className="py-2 px-3 text-left border-b border-gray-300">Molaire Massa (g/mol)</th>
+                  <th className="py-2 px-3 text-left border-b border-gray-300">Atoompercentage</th> {/* Hernoemd */}
+                  <th className="py-2 px-3 text-left border-b border-gray-300">Massapercentage</th> {/* Nieuw */}
+                </tr>
+              </thead>
+              <tbody>{/* Removed whitespace here */}
+                {elementalBreakdown.map((element, index) => (
+                  <tr key={element.name} className="border-b border-gray-200 hover:bg-gray-50">
+                    <td className="py-2 px-3 text-left">{element.name}</td>
+                    <td className="py-2 px-3 text-left">{element.count}</td>
+                    <td className="py-2 px-3 text-left">{element.molarMassContribution}</td>
+                    <td className="py-2 px-3 text-left">{element.atomicPercentage}%</td> {/* Gebruikt atomicPercentage */}
+                    <td className="py-2 px-3 text-left">{element.massPercentage}%</td> {/* Nieuw */}
+                  </tr>
+                ))}
+              </tbody>{/* Removed whitespace here */}
+            </table>
           </div>
         </div>
       )}
