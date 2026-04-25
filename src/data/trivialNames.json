@@ -150,6 +150,21 @@
   "(COOH)2": [
     "oxaalzuur"
   ],
+  "C6H5OH": [
+    "fenol"
+  ],
+  "(CH3)3C(CH2)C(CH3)(CH2)" [
+    "tmp1",
+    "dib",
+    "di-isobutyleen",
+    "diisobutyleen"
+  ],
+  "(C6H4OH)(CH3)2C(CH2)(CH3)3C" [
+    "pto",
+    "ptop",
+    "para-tertairoctylfenol",
+    "paratertairoctylfenol"
+  ],
   "CaC": [
     "calciumcarbide",
     "carbid"
