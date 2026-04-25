@@ -24,7 +24,7 @@
   "C6H4(CH3)2": [
     "xyleen"
   ],
-  "C6H5": [
+  "C6H5OH": [
     "fenol",
     "phenol",
     "hydroxybenzeen"
@@ -149,9 +149,6 @@
   ],
   "(COOH)2": [
     "oxaalzuur"
-  ],
-  "C6H5OH": [
-    "fenol"
   ],
   "(CH3)3C(CH2)C(CH3)(CH2)": [
     "tmp1",
